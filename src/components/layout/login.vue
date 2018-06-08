@@ -3,12 +3,12 @@
     <section class="panel">
       <div class="login-panel">
         <div class="logo-wrapper">
-          <img class="logo" src="../assets/images/logo.png" alt="">
+          <img class="logo" src="../../assets/images/logo.png" alt="">
         </div>
         <div class="form-wrapper">
           <div class="form-item">
             <div class="input-icon">
-              <img src="../assets/images/user.png" alt="">
+              <img src="../../assets/images/user.png" alt="">
             </div>
             <div class="input-wrapper">
               <input type="text" v-model="form.account" placeholder="请输入账户">
@@ -16,7 +16,7 @@
           </div>
           <div class="form-item">
             <div class="input-icon">
-              <img src="../assets/images/password.png" alt="">
+              <img src="../../assets/images/password.png" alt="">
             </div>
             <div class="input-wrapper">
               <input type="password" v-model="form.password" placeholder="请输入密码">
@@ -24,7 +24,7 @@
           </div>
           <div class="form-item">
             <div class="input-icon">
-              <img src="../assets/images/code.png" alt="">
+              <img src="../../assets/images/code.png" alt="">
             </div>
             <div class="input-wrapper">
               <input type="text" maxlength="6" v-model="form.code" placeholder="请输入验证码">
@@ -81,7 +81,7 @@
 </script>
 
 <style lang="less" scoped>
-  @import "../assets/less/base";
+  @import "../../assets/less/base";
 
   .container {
     height: 100%;
@@ -210,7 +210,7 @@
       .carousel-panel {
         flex: 1;
         height: 800px;
-        background-image: url("../assets/images/laptop.jpg");
+        background-image: url("../../assets/images/laptop.jpg");
         background-position: center;
         background-size: cover;
         background-repeat: no-repeat;

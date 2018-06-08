@@ -2,14 +2,25 @@
 // (runtime-only or standalone) has been set in webpack.base.conf with an alias.
 import Vue from 'vue'
 import App from './App'
+import store from './store'
 import router from './router'
+
 import iView from 'iview'
 import 'iview/dist/styles/iview.css'
-Vue.config.productionTip = false
+import BaseMixin from './mixins/base'
+
+import http from './libs/http'
+
 Vue.use(iView)
+Vue.use(http)
+Vue.mixin(BaseMixin)
+
+Vue.config.productionTip = false
+
 /* eslint-disable no-new */
 new Vue({
   el: '#app',
+  store,
   router,
   components: {App},
   template: '<App/>'
