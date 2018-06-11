@@ -10,10 +10,10 @@
     </div>
     <div class="menu-wrapper" v-if="value">
       <template v-for="(menu, index) in menus">
-        <router-link tag="a" :class="{active: menu.path === $route.name}" :to="{name: menu.path}" class="menu-item"
+        <router-link tag="a" :class="{active: menu.name === $route.name}" :to="{name: menu.name}" class="menu-item"
                      :key="index">
           <Icon size="18" :type="menu.icon"></Icon>
-          {{menu.name}}
+          {{menu.label}}
         </router-link>
       </template>
     </div>
@@ -76,40 +76,17 @@
   export default {
     data () {
       return {
-        menus: [
-          {
-            name: 'Dashboard',
-            path: 'Dashboard',
-            icon: 'pie-graph'
-          },
-          {
-            name: '用户管理',
-            path: 'Users',
-            icon: 'person'
-          },
-          {
-            name: '订单管理',
-            path: 'Orders',
-            icon: 'ios-list'
-          },
-          {
-            name: '商品管理',
-            path: 'Products',
-            icon: 'crop'
-          }
-        ]
       }
     },
     props: {
       height: String,
-      value: Boolean
+      value: Boolean,
+      menus: Array
     },
     methods: {
       toggle () {
         this.$emit('input', !this.value)
       }
-    },
-    mounted () {
     }
   }
 </script>

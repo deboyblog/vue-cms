@@ -1,26 +1,21 @@
 <template>
   <div>
     <!--操作-->
-    <Row style="padding: 20px 0;height: 60px;margin-top: 0" v-if="(showInsert && permissions.INSERT) || showSearch">
+    <Row style="padding: 20px 0;height: 60px;margin-top: 0" v-if="extraOperations.length > 0 || enableSearch">
       <i-col span="10">
-        <i-button v-if="showInsert && permissions.INSERT" @click="insertAction" type="primary"
-                  style="margin-right: 10px;"
-                  key="insert">
-          新增
-        </i-button>
-        <template v-for="(operation, index) in leftOperations">
+        <template v-for="(operation, index) in extraOperations">
           <i-button :key="index" @click="operation.action" :type="operation.type"
                     style="margin-right: 10px;">
-            {{operation.name}}
+            {{operation.label}}
           </i-button>
         </template>
         <div style="color: white">.</div>
       </i-col>
       <i-col span="14" style="text-align: right">
-        <i-input v-if="showSearch" @keyup.enter.native="loadData" v-model="query"
-                 :placeholder="searchFields"
+        <i-input v-if="enableSearch" @keyup.enter.native="loadData" v-model="query"
+                 :placeholder="searchLabel"
                  icon="ios-search"
-                 style="width: 400px"></i-input>
+                 style="max-width: 400px"></i-input>
       </i-col>
     </Row>
     <section v-if="filters.length > 0" class="filters-wrapper">
@@ -36,13 +31,18 @@
                   </template>
                 </Select>
               </template>
-              <template v-if="filter.type === 'daterange'">
+              <template v-if="filter.type === 'dateRange'">
                 <!--时间范围选择-->
-                <!--<DatePicker type="datetimerange" format="yyyy-MM-dd HH:mm:ss" v-model="filter.value"-->
-                <!--placeholder="Select date and time" style="width: 300px"></DatePicker>-->
                 <Date-picker type="datetimerange" placement="bottom-start"
                              :value="[currentFilterParams[filter.bindKey[0]], currentFilterParams[filter.bindKey[1]]]"
-                             @on-change="filter.onChange" placeholder="选择日期"
+                             @on-change="(val) => {
+                              if (typeof filter.onChange === 'function') {
+                                filter.onChange(val)
+                              } else {
+                                currentFilterParams[filter.bindKey[0]] = val[0]
+                                currentFilterParams[filter.bindKey[1]] = val[1]
+                              }
+                             }" placeholder="选择日期"
                              style="width: 250px"></Date-picker>
               </template>
               <template v-if="filter.type === 'priceRange'">
@@ -53,25 +53,12 @@
                 </div>
               </template>
               <template v-if="filter.type === 'areaPicker'">
-                <div style="display: flex;flex-direction: row">
-                  <Select v-model="filterParams[filter.bindKey[0]]" @on-change="() => {
-                    filterParams[filter.bindKey[1]] = ''
-                    loadArea(2, filterParams[filter.bindKey[0]])
-                  }">
-                    <Option :key="index" v-for="(area, index) in provinces" :value="area.id">{{area.name}}</Option>
-                  </Select>
-                  <Select style="margin-left: 10px" @on-change="() => {
-                    filterParams[filter.bindKey[2]] = ''
-                    loadArea(3, filterParams[filter.bindKey[1]])
-                  }" v-if="filter.bindKey.length >= 2" v-model="filterParams[filter.bindKey[1]]">
-                    <Option :key="index" v-for="(area, index) in cities" :value="area.id">{{area.name}}</Option>
-                  </Select>
-                  <Select style="margin-left: 10px" @on-change="() => {
-                    loadArea(3, filterParams[filter.bindKey[1]])
-                  }" v-if="filter.bindKey.length === 3" v-model="filterParams[filter.bindKey[2]]">
-                    <Option :key="index" v-for="(area, index) in districts" :value="area.id">{{area.name}}</Option>
-                  </Select>
-                </div>
+                <area-selector
+                  :province.sync="currentFilterParams[filter.bingKey[0]]"
+                  :city.sync="currentFilterParams[filter.bingKey[1]]"
+                  :district.sync="currentFilterParams[filter.bingKey[2]]"
+                  :street.sync="currentFilterParams[filter.bingKey[3]]"
+                ></area-selector>
               </template>
             </div>
           </div>
@@ -169,39 +156,16 @@
 <script>
   export default {
     props: {
-      noInit: {
+      autoInit: {
         type: Boolean,
         default () {
           return false
         }
       },
-      showSearch: {
+      enableSearch: {
         type: Boolean,
         default () {
           return true
-        }
-      },
-      permissions: {
-        type: Object,
-        default () {
-          return {
-            INSERT: true,
-            FILTER: true,
-            SEARCH: true
-          }
-        }
-      },
-      showInsert: {
-        type: Boolean,
-        default () {
-          return true
-        }
-      },
-      insertAction: {
-        type: Function,
-        default () {
-          return () => {
-          }
         }
       },
       onRowClick: {
@@ -211,10 +175,13 @@
           }
         }
       },
-      column: {
-        type: Array
+      columns: {
+        type: Array,
+        default () {
+          return []
+        }
       },
-      leftOperations: {
+      extraOperations: {
         type: Array,
         default () {
           return []
@@ -226,13 +193,13 @@
           return []
         }
       },
-      operations: {
+      rowOperations: {
         type: Array,
         default () {
           return []
         }
       },
-      customParams: {
+      extraParams: {
         type: [Array],
         default () {
           return []
@@ -244,14 +211,14 @@
           return []
         }
       },
-      api: {
-        type: String
-      },
-      filterParams: {
+      filtersParams: {
         type: Object,
         default () {
           return {}
         }
+      },
+      apiUrl: {
+        type: String
       }
     },
     data () {
@@ -262,9 +229,7 @@
           page: 1,
           total: 0
         },
-        provinces: [],
-        cities: [],
-        districts: [],
+        emptyVar: null,
         hadInitFilter: false,
         data: [],
         selection: [],
@@ -275,23 +240,27 @@
         displayFields: [],
         // 真正显示的数据列
         iColumn: [],
-        currentFilterParams: this.filterParams
+        currentFilterParams: this.filtersParams
       }
     },
     computed: {
-      searchFields () {
+      searchLabel () {
         let placeholder = '输入 '
-        this.column.forEach(row => {
+        this.columns.forEach(row => {
           if (row.searchable) {
             placeholder += `${row.title}、`
           }
         })
-        return placeholder.substring(0, placeholder.length - 1) + ' 回车即可搜索'
+        if (placeholder) {
+          return '输入 关键词 回车搜索'
+        } else {
+          return placeholder.substring(0, placeholder.length - 1) + ' 回车搜索'
+        }
       }
     },
     watch: {
       displayFields: 'renderDisplayColumns',
-      column: 'initDisplayFields',
+      columns: 'initDisplayFields',
       displayColumns: 'initIColumns',
       sortParams: 'loadData',
       currentFilterParams: {
@@ -299,16 +268,13 @@
         handler (val) {
           if (this.hadInitFilter) {
             this.$nextTick(() => {
-              this.$emit('update:', val)
+              this.$emit('update:filtersParams', val)
             })
           }
         }
       },
-      filterParams (val) {
+      filtersParams (val) {
         this.currentFilterParams = val
-        if (val && val.length > 0 && this.filterParams.map(f => f.type).indexOf('areaPicker') >= 0) {
-          this.loadArea()
-        }
       }
     },
     methods: {
@@ -357,9 +323,7 @@
               return val.customRender(h, params)
             },
             // 链接
-            link: (h, params) => {
-              const row = params.row
-              const column = params.column
+            link: (h, {row, column}) => {
               if (row[column['field']]) {
                 return h('router-link', {
                   style: {
@@ -374,9 +338,7 @@
               }
             },
             // 图片
-            img: (h, params) => {
-              const row = params.row
-              const column = params.column
+            img: (h, {row, column}) => {
               if (row[column['field']]) {
                 return h('img', {
                   style: {
@@ -398,19 +360,15 @@
                 return h('span', '')
               }
             },
-            select: (h, params) => {
-              return h('span', params.column.options[params.row[params.column.displayField]])
+            select: (h, {row, column}) => {
+              return h('span', column.options[row[column.displayField]])
             },
             // 默认 取 displayField 字段对应的值
-            default: (h, params) => {
-              const row = params.row
-              const column = params.column
+            default: (h, {row, column}) => {
               return h('span', this.$form.getRowValue(row, column))
             },
             // 默认 取 displayField 字段对应的值
-            text: (h, params) => {
-              const row = params.row
-              const column = params.column
+            text: (h, {row, column}) => {
               return h('span', this.$form.getRowValue(row, column))
             }
           }
@@ -418,8 +376,8 @@
           iColumn.push(val)
         })
         // 添加行操作
-        let operations = this.operations
-        if (operations.length > 0) {
+        let operations = this.rowOperations
+        if (operations && operations.length > 0) {
           // 渲染行操作
           iColumn.push({
             title: '操作',
@@ -455,7 +413,7 @@
       },
       initDisplayFields () {
         let fields = []
-        this.column.forEach(field => {
+        this.columns.forEach(field => {
           fields.push(field.field)
         })
         this.displayFields = fields
@@ -463,7 +421,7 @@
       renderDisplayColumns () {
         let displayFields = JSON.parse(JSON.stringify(this.displayFields))
         let displayColumns = []
-        this.column.forEach(field => {
+        this.columns.forEach(field => {
           if (displayFields.indexOf(field.field) >= 0) {
             displayColumns.push(field)
           }
@@ -494,7 +452,8 @@
           query: this.query
         }, customParams, this.currentFilterParams)
         this.filters.forEach(filter => {
-          if (filter.isParams === false) {
+          // 可以通过without选项将参数排除在外
+          if (filter.without) {
             delete params[filter.bindKey]
           }
         })
@@ -515,7 +474,7 @@
       },
       // 获取参数 然后请求接口
       loadData (init = false) {
-        if (!this.api) {
+        if (!this.apiUrl) {
           this.$Message.error('API地址没有填写')
         } else {
           if (init) {
@@ -523,7 +482,7 @@
           }
           this.data = []
           console.log('###', this.getRequestParams())
-          this.$http.get(this.api, {params: this.getRequestParams()}).then(res => {
+          this.$http.get(this.apiUrl, {params: this.getRequestParams()}).then(res => {
             this.data = res.data.content
             this.tableParams.total = res.data.totalElements
           })
@@ -531,25 +490,7 @@
       },
       runAction (index, rowIndex, e) {
         // 执行行操作
-        this.operations[index]['action'](this.data[rowIndex], e)
-      },
-      /**
-       * 加载下的区域
-       * @param level
-       * @param parentId
-       */
-      loadArea (level = 1, parentId = null) {
-        let lists = ['provinces', 'cities', 'districts']
-        this.$http.get('area/findAll', {
-          params: {
-            level: level,
-            parentId: parentId
-          }
-        }).then(rst => {
-          let key = lists[level - 1]
-          this[key] = rst.data
-          // this.$set(this, key, rst.data)
-        })
+        this.rowOperations[index]['action'](this.data[rowIndex], e)
       },
       onChangePage (page) {
         // 改变页码
@@ -570,11 +511,15 @@
       initFilters (forceReset = false) {
         this.hadInitFilter = false
         this.filters.forEach((filterItem) => {
+          if (!filterItem.bindKey) {
+            console.warring('自定义筛选条件中，bindKey 参数必须有')
+            return
+          }
           if (typeof filterItem.bindKey === 'string') {
             if (forceReset) {
               this.$set(this.currentFilterParams, filterItem.bindKey, filterItem.default || '')
-            } else if (this.filterParams[filterItem.bindKey]) {
-              this.$set(this.currentFilterParams, filterItem.bindKey, this.filterParams[filterItem.bindKey])
+            } else if (this.filtersParams[filterItem.bindKey]) {
+              this.$set(this.currentFilterParams, filterItem.bindKey, this.filtersParams[filterItem.bindKey])
             } else if (filterItem.default) {
               this.$set(this.currentFilterParams, filterItem.bindKey, filterItem.default)
             } else {

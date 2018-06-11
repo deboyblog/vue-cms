@@ -100,7 +100,7 @@
         this.$emit('input', list.join())
       },
       updateDefaultList (val) {
-        let list = val && val.split(',') || []
+        let list = (val && val.split(',')) || []
         let videos = []
         list.forEach(item => {
           videos.push({
@@ -111,11 +111,6 @@
         this.defaultList = videos
       },
       handleView (file) {
-//        if (typeof file.url !== 'string') {
-//          this.$store.dispatch('openVideoPreview', file.url.join(''))
-//        } else {
-//          this.$store.dispatch('openVideoPreview', file.url)
-//        }
       },
       handleRemove (file) {
         // 从 upload 实例删除数据

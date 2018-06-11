@@ -14,7 +14,8 @@ import http from './libs/http'
 Vue.use(iView)
 Vue.use(http)
 Vue.mixin(BaseMixin)
-
+// 通用组件
+require('./components')
 Vue.config.productionTip = false
 
 /* eslint-disable no-new */

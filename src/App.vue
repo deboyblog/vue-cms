@@ -8,7 +8,7 @@
       </div>
       <div class="content-wrapper">
         <div class="sidebar-wrapper" :class="{open: sidebarOpen, close: !sidebarOpen}">
-          <AppSidebar v-model="sidebarOpen" :height="minContentHeight"></AppSidebar>
+          <AppSidebar v-model="sidebarOpen" :height="minContentHeight" :menus="menus"></AppSidebar>
         </div>
         <div class="layout-content" :style="{minHeight: minContentHeight}">
           <keep-alive>
@@ -38,7 +38,19 @@
     data () {
       return {
         windowAvailHeight: 0,
-        sidebarOpen: true
+        sidebarOpen: true,
+        menus: [
+          {
+            label: 'Dashboard',
+            name: 'Dashboard',
+            icon: 'pie-graph'
+          },
+          {
+            label: '用户管理',
+            name: 'Users',
+            icon: 'person'
+          }
+        ]
       }
     },
     computed: {
