@@ -154,6 +154,7 @@
 </style>
 
 <script>
+  import {getRowValue} from '../utils/form-helper'
   export default {
     props: {
       autoInit: {
@@ -365,11 +366,11 @@
             },
             // 默认 取 displayField 字段对应的值
             default: (h, {row, column}) => {
-              return h('span', this.$form.getRowValue(row, column))
+              return h('span', getRowValue(row, column))
             },
             // 默认 取 displayField 字段对应的值
             text: (h, {row, column}) => {
-              return h('span', this.$form.getRowValue(row, column))
+              return h('span', getRowValue(row, column))
             }
           }
           val.render = rowRenders[val.type]
@@ -434,15 +435,15 @@
       },
       // 获取请求参数
       getRequestParams () {
-        let customParams = {}
-        if (this.customParams) {
-          this.customParams.forEach(param => {
+        let extraParams = {}
+        if (this.extraParams) {
+          this.extraParams.forEach(param => {
             if (typeof param === 'function') {
               // 将表格实例传递给他
               let newParam = param(this)
-              customParams[newParam.key] = newParam.value
+              extraParams[newParam.key] = newParam.value
             } else {
-              customParams[param.key] = param.value
+              extraParams[param.key] = param.value
             }
           })
         }
@@ -450,7 +451,7 @@
           page: this.tableParams.page - 1,
           size: this.tableParams.pageSize,
           query: this.query
-        }, customParams, this.currentFilterParams)
+        }, extraParams, this.currentFilterParams)
         this.filters.forEach(filter => {
           // 可以通过without选项将参数排除在外
           if (filter.without) {

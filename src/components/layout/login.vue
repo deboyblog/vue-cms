@@ -70,8 +70,9 @@
         this.codeUrl = (process.env.NODE_ENV !== 'production' ? 'api' : '') + '/code?' + Math.random()
       },
       onLogin () {
+        this.$emit('on-login')
         // TODO 替换联调登录接口
-        this.$router.push({name: 'Dashboard'})
+        // this.$router.push({name: 'Dashboard'})
       }
     },
     mounted () {

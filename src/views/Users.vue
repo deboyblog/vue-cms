@@ -6,6 +6,7 @@
                  :multiple-operations="getMultipleOperations()"
                  :filters="getFilters()"
                  :extra-operations="getExtraOperations()"
+                 :extra-params="getExtraParams()"
                  :filters-params.sync="filtersParams"
                  :api-url="`${tableName}/page`"
       ></app-table>
@@ -27,7 +28,20 @@
     },
     methods: {
       getColumns () {
-        return []
+        return [
+          {
+            title: 'ID',
+            field: 'id',
+            displayField: 'id',
+            type: 'text'
+          },
+          {
+            title: '用户名',
+            field: 'username',
+            displayField: 'username',
+            type: 'text'
+          }
+        ]
       },
       getRowOperations () {
         return []
@@ -36,6 +50,10 @@
         return []
       },
       getExtraOperations () {
+        return []
+      },
+      // [{key: '', value: ''}]
+      getExtraParams () {
         return []
       },
       getFilters () {

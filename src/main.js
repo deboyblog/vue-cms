@@ -10,7 +10,6 @@ import 'iview/dist/styles/iview.css'
 import BaseMixin from './mixins/base'
 
 import http from './libs/http'
-
 Vue.use(iView)
 Vue.use(http)
 Vue.mixin(BaseMixin)

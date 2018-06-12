@@ -2,23 +2,28 @@
   <div id="app" :style="{
     minHeight: `${windowAvailHeight}px`
   }">
-    <div class="layout-wrapper">
-      <div class="layout-header">
-        <AppHeader></AppHeader>
-      </div>
-      <div class="content-wrapper">
-        <div class="sidebar-wrapper" :class="{open: sidebarOpen, close: !sidebarOpen}">
-          <AppSidebar v-model="sidebarOpen" :height="minContentHeight" :menus="menus"></AppSidebar>
+    <template v-if="hadLogin">
+      <div class="layout-wrapper">
+        <div class="layout-header">
+          <AppHeader></AppHeader>
         </div>
-        <div class="layout-content" :style="{minHeight: minContentHeight}">
-          <keep-alive>
-            <router-view></router-view>
-          </keep-alive>
+        <div class="content-wrapper">
+          <div class="sidebar-wrapper" :class="{open: sidebarOpen, close: !sidebarOpen}">
+            <AppSidebar v-model="sidebarOpen" :height="minContentHeight" :menus="menus"></AppSidebar>
+          </div>
+          <div class="layout-content" :style="{minHeight: minContentHeight}">
+            <keep-alive>
+              <router-view></router-view>
+            </keep-alive>
+          </div>
         </div>
+        <BackTop></BackTop>
       </div>
-      <BackTop></BackTop>
-    </div>
-    <Gallery v-model="gallery.show" :picture-index="gallery.pictureIndex" :data="gallery.imgList"></Gallery>
+      <Gallery v-model="gallery.show" :picture-index="gallery.pictureIndex" :data="gallery.imgList"></Gallery>
+    </template>
+    <template v-else>
+      <Login @on-login="hadLogin = true"></Login>
+    </template>
   </div>
 </template>
 <script type="text/ecmascript-6">
@@ -39,6 +44,7 @@
       return {
         windowAvailHeight: 0,
         sidebarOpen: true,
+        hadLogin: false,
         menus: [
           {
             label: 'Dashboard',
@@ -84,10 +90,12 @@
   #app {
     width: 100%;
     background: #f5f7fa;
+    display: flex;
     * {
       box-sizing: border-box;
     }
     .layout-wrapper {
+      flex: 1;
       position: relative;
       display: flex;
       flex-direction: column;
